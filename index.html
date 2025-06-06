@@ -10,7 +10,7 @@
     <div class="container">
         <h1>Series Probability Calculator</h1>
         <p class="description">
-            Enter the team names and the decimal odds for each team to win in their respective home games. The calculator will simulate all possible series outcomes to generate detailed probabilities.
+            Enter the team names, matchup odds, and the current state of the series. The calculator will simulate all possible future outcomes to generate detailed probabilities.
         </p>
 
         <div class="settings-card">
@@ -31,6 +31,18 @@
                         <option value="5" selected>Best-of-5 (H-H-A-A-H)</option>
                         <option value="7">Best-of-7 (H-H-A-A-H-A-H)</option>
                     </select>
+                </div>
+                 <div class="input-group">
+                    <label for="currentWinsA">Team A Current Wins</label>
+                    <input type="number" id="currentWinsA" value="0" min="0">
+                </div>
+                 <div class="input-group">
+                    <label for="currentWinsB">Team B Current Wins</label>
+                    <input type="number" id="currentWinsB" value="0" min="0">
+                </div>
+                 <div class="input-group">
+                    <label for="breaksSoFar">Breaks So Far</label>
+                    <input type="number" id="breaksSoFar" value="0" min="0" title="A 'break' is a win by the away team.">
                 </div>
             </div>
         </div>

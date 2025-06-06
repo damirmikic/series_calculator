@@ -19,7 +19,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 900px; /* Increased width for more content */
     margin: auto;
     background: transparent;
 }
@@ -60,17 +60,16 @@ h2 .icon {
     font-size: 1.2em;
 }
 
-.input-grid, .matchup-grid {
+.input-grid {
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 20px;
 }
 
-.input-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-}
-
 .matchup-grid {
+    display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
 }
 
 .input-group {
@@ -139,7 +138,7 @@ button:active {
 
 .results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 20px;
 }
 
@@ -149,6 +148,8 @@ button:active {
     padding: 20px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
 }
 
 .result-card h3 {
@@ -157,7 +158,7 @@ button:active {
 }
 
 .result-card.info {
-    grid-column: 1 / -1; /* Make this card span all columns */
+    grid-column: 1 / -1; 
     background-color: #e9f7fe;
     border-color: var(--primary-color);
     text-align: center;
@@ -166,18 +167,29 @@ button:active {
 table {
     width: 100%;
     border-collapse: collapse;
+    flex-grow: 1; /* Allows table to fill card space */
 }
 
 th, td {
-    padding: 12px;
+    padding: 10px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
 
 th {
     background-color: #f8f9fa;
+    font-weight: 500;
 }
 
 tr:last-child td {
     border-bottom: none;
+}
+
+td:nth-child(2), th:nth-child(2) {
+    text-align: right;
+}
+td:nth-child(3), th:nth-child(3) {
+    text-align: right;
+    font-weight: 700;
+    color: var(--primary-color);
 }

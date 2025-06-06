@@ -10,7 +10,7 @@
     <div class="container">
         <h1>Series Probability Calculator</h1>
         <p class="description">
-            Enter the team names, matchup odds, and the current state of the series. The calculator will simulate all possible future outcomes to generate detailed probabilities.
+            Enter the team names, matchup odds, and the current state of the series. The calculator will simulate all possible future outcomes to generate detailed probabilities and corresponding betting odds.
         </p>
 
         <div class="settings-card">
@@ -44,12 +44,17 @@
                     <label for="breaksSoFar">Breaks So Far</label>
                     <input type="number" id="breaksSoFar" value="0" min="0" title="A 'break' is a win by the away team.">
                 </div>
+                 <div class="input-group">
+                    <label for="margin">Bookmaker's Margin (%)</label>
+                    <input type="number" id="margin" value="5.0" step="0.1" min="0">
+                </div>
             </div>
         </div>
 
         <div class="odds-card">
             <h2><span class="icon">🎲</span> Matchup Odds</h2>
             <div class="matchup-grid">
+                <!-- Matchup 1: Team A is Home -->
                 <div class="matchup">
                     <div class="matchup-title">When Team A is Home</div>
                     <div class="input-group">
@@ -61,6 +66,7 @@
                         <input type="number" id="oddsB_away" value="2.50" step="0.01">
                     </div>
                 </div>
+                <!-- Matchup 2: Team B is Home -->
                 <div class="matchup">
                      <div class="matchup-title">When Team B is Home</div>
                     <div class="input-group">
@@ -75,10 +81,11 @@
             </div>
         </div>
 
-        <button id="calculateBtn">Calculate Probabilities</button>
+        <button id="calculateBtn">Calculate Probabilities & Odds</button>
 
         <div id="results-container">
-            </div>
+            <!-- Results will be dynamically inserted here -->
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

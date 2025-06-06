@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Series Odds & Probability Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Series Probability Calculator</h1>
+        <p class="description">
+            Enter the team names and the decimal odds for each team to win in their respective home games. The calculator will simulate all possible series outcomes to generate detailed probabilities.
+        </p>
+
+        <div class="settings-card">
+            <h2><span class="icon">⚙️</span> Series Setup</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="teamA">Team A (Higher Seed / Starts Home)</label>
+                    <input type="text" id="teamA" value="Team A" placeholder="Enter name for Team A">
+                </div>
+                <div class="input-group">
+                    <label for="teamB">Team B (Lower Seed)</label>
+                    <input type="text" id="teamB" value="Team B" placeholder="Enter name for Team B">
+                </div>
+                <div class="input-group">
+                    <label for="seriesFormat">Series Format</label>
+                    <select id="seriesFormat">
+                        <option value="3">Best-of-3 (H-H-A)</option>
+                        <option value="5" selected>Best-of-5 (H-H-A-A-H)</option>
+                        <option value="7">Best-of-7 (H-H-A-A-H-A-H)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="odds-card">
+            <h2><span class="icon">🎲</span> Matchup Odds</h2>
+            <div class="matchup-grid">
+                <div class="matchup">
+                    <div class="matchup-title">When Team A is Home</div>
+                    <div class="input-group">
+                        <label for="oddsA_home">Team A Wins (Home)</label>
+                        <input type="number" id="oddsA_home" value="1.50" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label for="oddsB_away">Team B Wins (Away)</label>
+                        <input type="number" id="oddsB_away" value="2.50" step="0.01">
+                    </div>
+                </div>
+                <div class="matchup">
+                     <div class="matchup-title">When Team B is Home</div>
+                    <div class="input-group">
+                        <label for="oddsA_away">Team A Wins (Away)</label>
+                        <input type="number" id="oddsA_away" value="2.90" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label for="oddsB_home">Team B Wins (Home)</label>
+                        <input type="number" id="oddsB_home" value="1.40" step="0.01">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="calculateBtn">Calculate Probabilities</button>
+
+        <div id="results-container">
+            </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

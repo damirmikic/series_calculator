@@ -12,6 +12,10 @@ function calculateAllProbabilities() {
     const seriesFormat = parseInt(document.getElementById('seriesFormat').value);
     const winsNeeded = Math.ceil(seriesFormat / 2);
 
+    const currentWinsA = parseInt(document.getElementById('currentWinsA').value) || 0;
+    const currentWinsB = parseInt(document.getElementById('currentWinsB').value) || 0;
+    const breaksSoFar = parseInt(document.getElementById('breaksSoFar').value) || 0;
+
     const odds = {
         a_home: parseFloat(document.getElementById('oddsA_home').value),
         b_away: parseFloat(document.getElementById('oddsB_away').value),
@@ -19,27 +23,34 @@ function calculateAllProbabilities() {
         b_home: parseFloat(document.getElementById('oddsB_home').value),
     };
 
+    // --- INPUT VALIDATION ---
+    const container = document.getElementById('results-container');
     if (Object.values(odds).some(o => isNaN(o) || o <= 1)) {
-        alert('Please enter valid odds (must be a number greater than 1).');
+        container.innerHTML = `<div class="result-card info">Error: Please enter valid odds (must be a number greater than 1).</div>`;
+        return;
+    }
+    if (currentWinsA >= winsNeeded || currentWinsB >= winsNeeded) {
+        const winner = currentWinsA >= winsNeeded ? teamA_Name : teamB_Name;
+        container.innerHTML = `<div class="result-card info">The series is already over. Winner: <strong>${winner}</strong></div>`;
+        return;
+    }
+    if (currentWinsA < 0 || currentWinsB < 0 || breaksSoFar < 0 || breaksSoFar > (currentWinsA + currentWinsB)) {
+        container.innerHTML = `<div class="result-card info">Error: Invalid series state. Please check the current wins and breaks.</div>`;
         return;
     }
 
-    // --- 2. NORMALIZE ODDS TO PROBABILITIES (removes bookmaker's margin) ---
+    // --- 2. NORMALIZE ODDS TO PROBABILITIES ---
     const implied_a_home = 1 / odds.a_home;
     const implied_b_away = 1 / odds.b_away;
     const prob_a_at_home = implied_a_home / (implied_a_home + implied_b_away);
-    const prob_b_at_a_home = 1 - prob_a_at_home;
 
     const implied_a_away = 1 / odds.a_away;
     const implied_b_home = 1 / odds.b_home;
     const prob_a_at_b_home = implied_a_away / (implied_a_away + implied_b_home);
-    const prob_b_at_b_home = 1 - prob_a_at_b_home;
     
     const probs = {
         teamA_wins_at_A: prob_a_at_home,
-        teamB_wins_at_A: prob_b_at_a_home,
         teamA_wins_at_B: prob_a_at_b_home,
-        teamB_wins_at_B: prob_b_at_b_home,
     };
 
     // --- 3. DEFINE HOME/AWAY SCHEDULE ---
@@ -51,6 +62,7 @@ function calculateAllProbabilities() {
 
     // --- 4. RUN RECURSIVE SIMULATION ---
     let finalOutcomes = [];
+    const gamesPlayed = currentWinsA + currentWinsB;
 
     function traverseSeries(winsA, winsB, gameNum, pathProb, breaks) {
         // Base case: Series is over
@@ -65,6 +77,9 @@ function calculateAllProbabilities() {
             return;
         }
 
+        // Stop if schedule runs out (only happens with invalid input)
+        if (gameNum > seriesFormat) return;
+
         const homeTeam = schedule[gameNum - 1];
         const probA_wins = (homeTeam === 'A') ? probs.teamA_wins_at_A : probs.teamA_wins_at_B;
 
@@ -75,7 +90,7 @@ function calculateAllProbabilities() {
         traverseSeries(winsA, winsB + 1, gameNum + 1, pathProb * (1 - probA_wins), breaks + (homeTeam === 'A' ? 1 : 0));
     }
 
-    traverseSeries(0, 0, 1, 1.0, 0);
+    traverseSeries(currentWinsA, currentWinsB, gamesPlayed + 1, 1.0, breaksSoFar);
 
     // --- 5. AGGREGATE RESULTS ---
     const results = {
@@ -116,7 +131,7 @@ function displayResults(results, teamA, teamB, format) {
             </table>
         </div>
         <div class="result-card">
-            <h3>📊 Correct Score</h3>
+            <h3>📊 Final Score</h3>
             <table>
                 <tr><th>Final Score</th><th>Probability</th></tr>`;
     Object.entries(results.correctScore).sort((a,b) => b[1] - a[1]).forEach(([score, prob]) => {
@@ -129,7 +144,7 @@ function displayResults(results, teamA, teamB, format) {
         <div class="result-card">
             <h3>🗓️ Exact Number of Games</h3>
             <table>
-                <tr><th>Games Played</th><th>Probability</th></tr>`;
+                <tr><th>Total Games Played</th><th>Probability</th></tr>`;
     Object.entries(results.exactGames).sort((a,b) => parseInt(a[0]) - parseInt(b[0])).forEach(([games, prob]) => {
         gamesHtml += `<tr><td>${games}</td><td>${toPercent(prob)}</td></tr>`;
     });
@@ -137,7 +152,9 @@ function displayResults(results, teamA, teamB, format) {
                     <tr><th>Market</th><th>Probability</th></tr>`;
     
     // Calculate Over/Under for games
-    for (let i = format - 1; i < format; i++) {
+    const gamesPlayed = Object.keys(results.exactGames).map(Number);
+    const minGames = Math.min(...gamesPlayed);
+    for (let i = minGames; i < format; i++) {
         const threshold = i + 0.5;
         let overProb = 0;
         let underProb = 0;
@@ -155,9 +172,9 @@ function displayResults(results, teamA, teamB, format) {
     // --- Breaks & Handicap ---
     let breaksHtml = `
         <div class="result-card">
-            <h3>✈️ Exact Number of Breaks</h3>
+            <h3>✈️ Total Number of Breaks</h3>
             <table>
-                <tr><th>Breaks</th><th>Probability</th></tr>`;
+                <tr><th>Total Breaks</th><th>Probability</th></tr>`;
     Object.entries(results.totalBreaks).sort((a,b) => parseInt(a[0]) - parseInt(b[0])).forEach(([breaks, prob]) => {
         breaksHtml += `<tr><td>${breaks}</td><td>${toPercent(prob)}</td></tr>`;
     });
@@ -165,7 +182,7 @@ function displayResults(results, teamA, teamB, format) {
                 <tr><th>Handicap</th><th>Probability</th></tr>`;
 
     // Calculate Handicap
-    const handicaps = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5];
+    const handicaps = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5];
     handicaps.forEach(h => {
         let probA = 0;
         let probB = 0;

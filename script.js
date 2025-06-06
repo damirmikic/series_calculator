@@ -5,11 +5,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+/**
+ * Converts a probability to decimal odds, applying a margin.
+ * @param {number} prob The true probability (0 to 1).
+ * @param {number} margin The bookmaker's margin as a decimal (e.g., 0.05 for 5%).
+ * @returns {number|string} The calculated decimal odds.
+ */
+function probabilityToOdds(prob, margin = 0) {
+    if (prob <= 0) return '—'; // Cannot have odds for a 0% chance event
+    // The margin is applied to the probability to create the "implied" probability.
+    // Odds are the reciprocal of this implied probability.
+    const impliedProb = prob * (1 + margin);
+    return 1 / impliedProb;
+}
+
 function calculateAllProbabilities() {
     // --- 1. GET USER INPUTS ---
     const teamA_Name = document.getElementById('teamA').value || 'Team A';
     const teamB_Name = document.getElementById('teamB').value || 'Team B';
     const seriesFormat = parseInt(document.getElementById('seriesFormat').value);
+    const margin = (parseFloat(document.getElementById('margin').value) || 0) / 100;
     const winsNeeded = Math.ceil(seriesFormat / 2);
 
     const currentWinsA = parseInt(document.getElementById('currentWinsA').value) || 0;
@@ -65,28 +80,16 @@ function calculateAllProbabilities() {
     const gamesPlayed = currentWinsA + currentWinsB;
 
     function traverseSeries(winsA, winsB, gameNum, pathProb, breaks) {
-        // Base case: Series is over
         if (winsA === winsNeeded || winsB === winsNeeded) {
-            finalOutcomes.push({
-                winsA,
-                winsB,
-                games: gameNum - 1,
-                prob: pathProb,
-                breaks
-            });
+            finalOutcomes.push({ winsA, winsB, games: gameNum - 1, prob: pathProb, breaks });
             return;
         }
-
-        // Stop if schedule runs out (only happens with invalid input)
         if (gameNum > seriesFormat) return;
 
         const homeTeam = schedule[gameNum - 1];
         const probA_wins = (homeTeam === 'A') ? probs.teamA_wins_at_A : probs.teamA_wins_at_B;
-
-        // Path 1: Team A wins the current game
-        traverseSeries(winsA + 1, winsB, gameNum + 1, pathProb * probA_wins, breaks + (homeTeam === 'B' ? 1 : 0));
         
-        // Path 2: Team B wins the current game
+        traverseSeries(winsA + 1, winsB, gameNum + 1, pathProb * probA_wins, breaks + (homeTeam === 'B' ? 1 : 0));
         traverseSeries(winsA, winsB + 1, gameNum + 1, pathProb * (1 - probA_wins), breaks + (homeTeam === 'A' ? 1 : 0));
     }
 
@@ -96,7 +99,6 @@ function calculateAllProbabilities() {
     const results = {
         winner: { [teamA_Name]: 0, [teamB_Name]: 0 },
         correctScore: {},
-        totalGames: {},
         exactGames: {},
         totalBreaks: {},
     };
@@ -106,100 +108,85 @@ function calculateAllProbabilities() {
         const score = `${outcome.winsA}-${outcome.winsB}`;
         
         results.winner[winner] += outcome.prob;
-        
         results.correctScore[score] = (results.correctScore[score] || 0) + outcome.prob;
         results.exactGames[outcome.games] = (results.exactGames[outcome.games] || 0) + outcome.prob;
         results.totalBreaks[outcome.breaks] = (results.totalBreaks[outcome.breaks] || 0) + outcome.prob;
     });
 
     // --- 6. DISPLAY RESULTS ---
-    displayResults(results, teamA_Name, teamB_Name, seriesFormat);
+    displayResults(results, teamA_Name, teamB_Name, seriesFormat, margin);
 }
 
-function displayResults(results, teamA, teamB, format) {
+function displayResults(results, teamA, teamB, format, margin) {
     const container = document.getElementById('results-container');
     const toPercent = (p) => (p * 100).toFixed(2) + '%';
+    const toOdds = (p) => {
+        const odds = probabilityToOdds(p, margin);
+        return typeof odds === 'number' ? odds.toFixed(2) : odds;
+    };
     
-    // --- Series Winner & Correct Score ---
-    let winnerHtml = `
-        <div class="result-card">
-            <h3>🏆 Series Winner</h3>
-            <table>
-                <tr><th>Team</th><th>Probability</th></tr>
-                <tr><td>${teamA}</td><td>${toPercent(results.winner[teamA])}</td></tr>
-                <tr><td>${teamB}</td><td>${toPercent(results.winner[teamB])}</td></tr>
-            </table>
-        </div>
-        <div class="result-card">
-            <h3>📊 Final Score</h3>
-            <table>
-                <tr><th>Final Score</th><th>Probability</th></tr>`;
-    Object.entries(results.correctScore).sort((a,b) => b[1] - a[1]).forEach(([score, prob]) => {
-        winnerHtml += `<tr><td>${score}</td><td>${toPercent(prob)}</td></tr>`;
-    });
-    winnerHtml += `</table></div>`;
-
-    // --- Exact Games & Totals ---
-    let gamesHtml = `
-        <div class="result-card">
-            <h3>🗓️ Exact Number of Games</h3>
-            <table>
-                <tr><th>Total Games Played</th><th>Probability</th></tr>`;
-    Object.entries(results.exactGames).sort((a,b) => parseInt(a[0]) - parseInt(b[0])).forEach(([games, prob]) => {
-        gamesHtml += `<tr><td>${games}</td><td>${toPercent(prob)}</td></tr>`;
-    });
-    gamesHtml += `</table></div><div class="result-card"><h3>📈 Total Games (Over/Under)</h3><table>
-                    <tr><th>Market</th><th>Probability</th></tr>`;
-    
-    // Calculate Over/Under for games
-    const gamesPlayed = Object.keys(results.exactGames).map(Number);
-    const minGames = Math.min(...gamesPlayed);
-    for (let i = minGames; i < format; i++) {
-        const threshold = i + 0.5;
-        let overProb = 0;
-        let underProb = 0;
-        Object.entries(results.exactGames).forEach(([games, prob]) => {
-            if (parseInt(games) > threshold) overProb += prob;
-            else underProb += prob;
+    // --- Render a generic table for a given market ---
+    const renderTable = (title, data) => {
+        let html = `
+            <div class="result-card">
+                <h3>${title}</h3>
+                <table>
+                    <tr><th>Outcome</th><th>Probability</th><th>Odds</th></tr>`;
+        data.forEach(row => {
+            html += `<tr><td>${row.label}</td><td>${toPercent(row.prob)}</td><td>${toOdds(row.prob)}</td></tr>`;
         });
-        if (overProb > 0.0001 && underProb > 0.0001) {
-             gamesHtml += `<tr><td>Over ${threshold}</td><td>${toPercent(overProb)}</td></tr>`;
-             gamesHtml += `<tr><td>Under ${threshold}</td><td>${toPercent(underProb)}</td></tr>`;
+        html += `</table></div>`;
+        return html;
+    };
+
+    // --- Prepare data for each market ---
+    const winnerData = Object.entries(results.winner).map(([label, prob]) => ({ label, prob }));
+    const scoreData = Object.entries(results.correctScore).sort((a,b) => b[1] - a[1]).map(([label, prob]) => ({ label, prob }));
+    const exactGamesData = Object.entries(results.exactGames).sort((a,b) => parseInt(a[0]) - parseInt(b[0])).map(([label, prob]) => ({ label: `${label} Games`, prob }));
+    const breaksData = Object.entries(results.totalBreaks).sort((a,b) => parseInt(a[0]) - parseInt(b[0])).map(([label, prob]) => ({ label: `${label} Breaks`, prob }));
+
+    // --- Over/Under Games Data ---
+    const ouGamesData = [];
+    const gamesPlayedArr = Object.keys(results.exactGames).map(Number);
+    if(gamesPlayedArr.length > 1) { // Only show O/U if more than one outcome is possible
+        const minGames = Math.min(...gamesPlayedArr);
+        for (let i = minGames; i < format; i++) {
+            const threshold = i + 0.5;
+            let overProb = 0;
+            Object.entries(results.exactGames).forEach(([games, prob]) => {
+                if (parseInt(games) > threshold) overProb += prob;
+            });
+            if (overProb > 0.0001 && overProb < 0.9999) {
+                ouGamesData.push({ label: `Over ${threshold} Games`, prob: overProb });
+                ouGamesData.push({ label: `Under ${threshold} Games`, prob: 1 - overProb });
+            }
         }
     }
-    gamesHtml += `</table></div>`;
-
-    // --- Breaks & Handicap ---
-    let breaksHtml = `
-        <div class="result-card">
-            <h3>✈️ Total Number of Breaks</h3>
-            <table>
-                <tr><th>Total Breaks</th><th>Probability</th></tr>`;
-    Object.entries(results.totalBreaks).sort((a,b) => parseInt(a[0]) - parseInt(b[0])).forEach(([breaks, prob]) => {
-        breaksHtml += `<tr><td>${breaks}</td><td>${toPercent(prob)}</td></tr>`;
-    });
-    breaksHtml += `</table></div><div class="result-card"><h3>⚖️ Series Handicap</h3><table>
-                <tr><th>Handicap</th><th>Probability</th></tr>`;
-
-    // Calculate Handicap
+    
+    // --- Handicap Data ---
+    const handicapData = [];
     const handicaps = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5];
     handicaps.forEach(h => {
-        let probA = 0;
-        let probB = 0;
+        let probA = 0, probB = 0;
         Object.entries(results.correctScore).forEach(([score, prob]) => {
             const [winsA, winsB] = score.split('-').map(Number);
             if (winsA - winsB > h) probA += prob;
             if (winsB - winsA > h) probB += prob;
         });
-
-        if (probA > 0.0001 && probA < 0.9999) {
-            breaksHtml += `<tr><td>${teamA} ${h > 0 ? '+' : ''}${h}</td><td>${toPercent(probA)}</td></tr>`;
-        }
-         if (probB > 0.0001 && probB < 0.9999) {
-            breaksHtml += `<tr><td>${teamB} ${h > 0 ? '+' : ''}${h}</td><td>${toPercent(probB)}</td></tr>`;
-        }
+        const formatH = (team, val) => `${team} ${val > 0 ? '+' : ''}${val}`;
+        if (probA > 0.0001 && probA < 0.9999) handicapData.push({label: formatH(teamA, h), prob: probA});
+        if (probB > 0.0001 && probB < 0.9999) handicapData.push({label: formatH(teamB, h), prob: probB});
     });
-    breaksHtml += `</table></div>`;
 
-    container.innerHTML = `<div class="results-grid">${winnerHtml}${gamesHtml}${breaksHtml}</div>`;
+    // --- Render all tables ---
+    container.innerHTML = `
+        <div class="results-grid">
+            ${renderTable('🏆 Series Winner', winnerData)}
+            ${renderTable('📊 Final Score', scoreData)}
+            ${renderTable('🗓️ Exact Number of Games', exactGamesData)}
+            ${ouGamesData.length > 0 ? renderTable('📈 Total Games (Over/Under)', ouGamesData) : ''}
+            ${renderTable('✈️ Total Number of Breaks', breaksData)}
+            ${handicapData.length > 0 ? renderTable('⚖️ Series Handicap', handicapData) : ''}
+        </div>
+    `;
 }

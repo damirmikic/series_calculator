@@ -306,6 +306,8 @@ select {
 .result-card:nth-child(4) { animation-delay: 0.16s; }
 .result-card:nth-child(5) { animation-delay: 0.20s; }
 .result-card:nth-child(6) { animation-delay: 0.24s; }
+.result-card:nth-child(7) { animation-delay: 0.28s; }
+.result-card:nth-child(8) { animation-delay: 0.32s; }
 
 .result-card h3 {
     font-size: 0.67rem;
@@ -432,3 +434,80 @@ td:nth-child(3) {
 
 .prob-low .prob-fill { background: var(--red); }
 .prob-low .prob-text { color: var(--text-dim); }
+
+/* ── Summary Statistics Card ─────────────────────────── */
+
+.result-card.summary-card,
+.result-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.summary-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.stat {
+    flex: 1 1 120px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.stat-value {
+    font-family: var(--mono);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+}
+
+.stat-value.prob-high { color: var(--green); }
+.stat-value.prob-mid  { color: var(--yellow); }
+.stat-value.prob-low  { color: var(--red); }
+
+.stat-label {
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* ── Individual Game Probabilities Table ─────────────── */
+
+.result-card.full-width th:nth-child(2),
+.result-card.full-width th:nth-child(3) {
+    text-align: left;
+}
+
+.result-card.full-width td:nth-child(3) {
+    text-align: left;
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    min-width: auto;
+}
+
+.game-prob {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-right: 6px;
+}
+
+.game-prob.prob-high { color: var(--green); }
+.game-prob.prob-mid  { color: var(--yellow); }
+.game-prob.prob-low  { color: var(--red); }
+
+.game-odds {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+}

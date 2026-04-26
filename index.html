@@ -3,26 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Series Odds & Probability Calculator</title>
+    <title>Series Analytics — Probability & Odds Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Series Probability Calculator</h1>
+        <header class="app-header">
+            <div class="app-logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 20h18M3 20V10l6-6 4 4 8-8v20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <h1>Series <span>Analytics</span></h1>
+                <p class="subtitle">Probability &amp; Odds Calculator</p>
+            </div>
+        </header>
+
         <p class="description">
-            Enter the team names, matchup odds, and the current state of the series. The calculator will simulate all possible future outcomes to generate detailed probabilities and corresponding betting odds.
+            Enter team names, matchup odds, and the current series state. The simulator traverses all possible future outcomes to generate detailed probabilities and betting odds.
         </p>
 
         <div class="settings-card">
-            <h2><span class="icon">⚙️</span> Series Setup</h2>
+            <h2>Series Setup</h2>
             <div class="input-grid">
                 <div class="input-group">
-                    <label for="teamA">Team A (Higher Seed / Starts Home)</label>
-                    <input type="text" id="teamA" value="Team A" placeholder="Enter name for Team A">
+                    <label for="teamA">Team A — Higher Seed</label>
+                    <input type="text" id="teamA" value="Team A" placeholder="Team A name">
                 </div>
                 <div class="input-group">
-                    <label for="teamB">Team B (Lower Seed)</label>
-                    <input type="text" id="teamB" value="Team B" placeholder="Enter name for Team B">
+                    <label for="teamB">Team B — Lower Seed</label>
+                    <input type="text" id="teamB" value="Team B" placeholder="Team B name">
                 </div>
                 <div class="input-group">
                     <label for="seriesFormat">Series Format</label>
@@ -32,31 +46,30 @@
                         <option value="7">Best-of-7 (H-H-A-A-H-A-H)</option>
                     </select>
                 </div>
-                 <div class="input-group">
-                    <label for="currentWinsA">Team A Current Wins</label>
+                <div class="input-group">
+                    <label for="currentWinsA">Team A Wins</label>
                     <input type="number" id="currentWinsA" value="0" min="0">
                 </div>
-                 <div class="input-group">
-                    <label for="currentWinsB">Team B Current Wins</label>
+                <div class="input-group">
+                    <label for="currentWinsB">Team B Wins</label>
                     <input type="number" id="currentWinsB" value="0" min="0">
                 </div>
-                 <div class="input-group">
+                <div class="input-group">
                     <label for="breaksSoFar">Breaks So Far</label>
                     <input type="number" id="breaksSoFar" value="0" min="0" title="A 'break' is a win by the away team.">
                 </div>
-                 <div class="input-group">
-                    <label for="margin">Bookmaker's Margin (%)</label>
+                <div class="input-group">
+                    <label for="margin">Bookmaker Margin %</label>
                     <input type="number" id="margin" value="5.0" step="0.1" min="0">
                 </div>
             </div>
         </div>
 
         <div class="odds-card">
-            <h2><span class="icon">🎲</span> Matchup Odds</h2>
+            <h2>Matchup Odds</h2>
             <div class="matchup-grid">
-                <!-- Matchup 1: Team A is Home -->
                 <div class="matchup">
-                    <div class="matchup-title">When Team A is Home</div>
+                    <div class="matchup-title">Team A is Home</div>
                     <div class="input-group">
                         <label for="oddsA_home">Team A Wins (Home)</label>
                         <input type="number" id="oddsA_home" value="1.50" step="0.01">
@@ -66,9 +79,8 @@
                         <input type="number" id="oddsB_away" value="2.50" step="0.01">
                     </div>
                 </div>
-                <!-- Matchup 2: Team B is Home -->
                 <div class="matchup">
-                     <div class="matchup-title">When Team B is Home</div>
+                    <div class="matchup-title">Team B is Home</div>
                     <div class="input-group">
                         <label for="oddsA_away">Team A Wins (Away)</label>
                         <input type="number" id="oddsA_away" value="2.90" step="0.01">
@@ -81,11 +93,9 @@
             </div>
         </div>
 
-        <button id="calculateBtn">Calculate Probabilities & Odds</button>
+        <button id="calculateBtn">Run Simulation</button>
 
-        <div id="results-container">
-            <!-- Results will be dynamically inserted here -->
-        </div>
+        <div id="results-container"></div>
     </div>
     <script src="script.js"></script>
 </body>

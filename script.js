@@ -124,16 +124,30 @@ function displayResults(results, teamA, teamB, format, margin) {
         const odds = probabilityToOdds(p, margin);
         return typeof odds === 'number' ? odds.toFixed(2) : odds;
     };
-    
-    // --- Render a generic table for a given market ---
+
+    const probClass = (p) => p >= 0.5 ? 'prob-high' : p >= 0.25 ? 'prob-mid' : 'prob-low';
+
     const renderTable = (title, data) => {
+        const maxProb = Math.max(...data.map(r => r.prob));
         let html = `
             <div class="result-card">
                 <h3>${title}</h3>
                 <table>
                     <tr><th>Outcome</th><th>Probability</th><th>Odds</th></tr>`;
         data.forEach(row => {
-            html += `<tr><td>${row.label}</td><td>${toPercent(row.prob)}</td><td>${toOdds(row.prob)}</td></tr>`;
+            const barWidth = maxProb > 0 ? ((row.prob / maxProb) * 100).toFixed(1) : 0;
+            const cls = probClass(row.prob);
+            html += `
+                <tr>
+                    <td>${row.label}</td>
+                    <td>
+                        <div class="prob-cell ${cls}">
+                            <div class="prob-bar"><div class="prob-fill" style="width:${barWidth}%"></div></div>
+                            <span class="prob-text">${toPercent(row.prob)}</span>
+                        </div>
+                    </td>
+                    <td>${toOdds(row.prob)}</td>
+                </tr>`;
         });
         html += `</table></div>`;
         return html;
@@ -181,12 +195,12 @@ function displayResults(results, teamA, teamB, format, margin) {
     // --- Render all tables ---
     container.innerHTML = `
         <div class="results-grid">
-            ${renderTable('🏆 Series Winner', winnerData)}
-            ${renderTable('📊 Final Score', scoreData)}
-            ${renderTable('🗓️ Exact Number of Games', exactGamesData)}
-            ${ouGamesData.length > 0 ? renderTable('📈 Total Games (Over/Under)', ouGamesData) : ''}
-            ${renderTable('✈️ Total Number of Breaks', breaksData)}
-            ${handicapData.length > 0 ? renderTable('⚖️ Series Handicap', handicapData) : ''}
+            ${renderTable('Series Winner', winnerData)}
+            ${renderTable('Final Score', scoreData)}
+            ${renderTable('Exact Number of Games', exactGamesData)}
+            ${ouGamesData.length > 0 ? renderTable('Total Games — Over / Under', ouGamesData) : ''}
+            ${renderTable('Total Number of Breaks', breaksData)}
+            ${handicapData.length > 0 ? renderTable('Series Handicap', handicapData) : ''}
         </div>
     `;
 }
